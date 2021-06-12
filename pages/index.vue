@@ -4,6 +4,9 @@
       <Logo />
       <h1 class="title">osk-firebase-example</h1>
       <div class="links">
+        <button @click="login">google login</button>
+        <button @click="logout">logout❤️</button>
+        <span>{{ auth }}</span>
         <a
           href="https://nuxtjs.org/"
           target="_blank"
@@ -27,8 +30,54 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import firebase from 'firebase/app'
+import 'firebase/auth'
 
-export default Vue.extend({})
+export default Vue.extend<
+  {
+    auth: boolean
+  },
+  {},
+  {}
+>({
+  data() {
+    return {
+      auth: false,
+    }
+  },
+  methods: {
+    async login() {
+      if (!this.auth) {
+        const currentUser = firebase.auth().currentUser
+        if (currentUser) {
+          this.auth = true
+        } else {
+          try {
+            await firebase
+              .auth()
+              .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            const provider = new firebase.auth.GoogleAuthProvider()
+            await firebase.auth().signInWithPopup(provider)
+            this.auth = true
+          } catch (e) {
+            console.log(e)
+            this.auth = false
+          }
+        }
+      }
+    },
+    async logout() {
+      if (this.auth) {
+        try {
+          await firebase.auth().signOut()
+          this.auth = false
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
+  },
+})
 </script>
 
 <style>
